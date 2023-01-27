@@ -3,52 +3,88 @@ package level1.test51;
 import java.util.*;
 
 /*
- * 문자열 s가 주어졌을 때, s의 각 위치마다 자신보다 앞에 나왔으면서, 자신과 가장 가까운 곳에 있는 같은 글자가 어디 있는지 알고 싶습니다.
- * 예를 들어, s="banana"라고 할 때,  각 글자들을 왼쪽부터 오른쪽으로 읽어 나가면서 다음과 같이 진행할 수 있습니다.
- * b는 처음 나왔기 때문에 자신의 앞에 같은 글자가 없습니다. 이는 -1로 표현합니다
- * a는 처음 나왔기 때문에 자신의 앞에 같은 글자가 없습니다. 이는 -1로 표현합니다.
- * n은 처음 나왔기 때문에 자신의 앞에 같은 글자가 없습니다. 이는 -1로 표현합니다.
- * a는 자신보다 두 칸 앞에 a가 있습니다. 이는 2로 표현합니다.
- * n도 자신보다 두 칸 앞에 n이 있습니다. 이는 2로 표현합니다.
- * a는 자신보다 두 칸, 네 칸 앞에 a가 있습니다. 이 중 가까운 것은 두 칸 앞이고, 이는 2로 표현합니다.
- * 따라서 최종 결과물은 [-1, -1, -1, 2, 2, 2]가 됩니다.
- * 문자열 s이 주어질 때, 위와 같이 정의된 연산을 수행하는 함수 solution을 완성해주세요.
+ * 슈퍼 게임 개발자 오렐리는 큰 고민에 빠졌다. 그녀가 만든 프랜즈 오천성이 대성공을 거뒀지만, 요즘 신규 사용자의 수가 급감한 것이다. 원인은 신규 사용자와 기존 사용자 사이에 스테이지 차이가 너무 큰 것이 문제였다.
+ * 이 문제를 어떻게 할까 고민 한 그녀는 동적으로 게임 시간을 늘려서 난이도를 조절하기로 했다. 역시 슈퍼 개발자라 대부분의 로직은 쉽게 구현했지만, 실패율을 구하는 부분에서 위기에 빠지고 말았다. 오렐리를 위해 실패율을 구하는 코드를 완성하라.
+ * 실패율은 다음과 같이 정의한다.
+ * 스테이지에 도달했으나 아직 클리어하지 못한 플레이어의 수 / 스테이지에 도달한 플레이어 수
+ * 전체 스테이지의 개수 N, 게임을 이용하는 사용자가 현재 멈춰있는 스테이지의 번호가 담긴 배열 stages가 매개변수로 주어질 때, 실패율이 높은 스테이지부터 내림차순으로 스테이지의 번호가 담겨있는 배열을 return 하도록 solution 함수를 완성하라.
  */
-
 class Solution {
-    public int[] solution(String s) {
-        int[] answer = new int[s.length()];
-
-        HashMap<Character, Integer> map = new HashMap<>();
-        for(int i=0; i<s.length(); i++) {
-            if(!map.containsKey(s.charAt(i))){ //해당글자가 이전에 없을떄
-                answer[i] = -1; // -1값을 주고
-                map.put(s.charAt(i),i); //해당값과 index값을 map에 넣는다.
-            }else { //해당 글자가 앞쪽에 있을때
-                int before = map.get(s.charAt(i)); //해당 글자가 있는 index를 가져온다
-                answer[i] = i - before; // 현재 index값과 해당 글자가 있는 index를 빼주어 글자사이의 차를 구한다.
-                map.put(s.charAt(i), i); //해당 값과 index를 map에 넣는다 *map은 중복값은 안들어간다 즉, index값만 현재값으로 변하는것이다
-            }
+    public int[] solution(int N, int[] stages) {
+        int[] answer = new int[N];       
+        int[] stageCount = new int[N+2];
+        int[] failRate = new int[N+1];
+        HashMap<Integer,Double> map = new HashMap<>();
+        
+        for(int stage : stages){ //분자
+            stageCount[stage]++;
         }
+        
+        int count = stages.length; //최대인원
+        for(int i = 1; i < failRate.length; i++){ //분모    
+            failRate[i] = count;
+            count -= stageCount[i];
+        }
+
+        for(int i = 1; i < failRate.length; i++){
+            if(failRate[i]==0 || stageCount[i]==0){
+                map.put(i,0.0);
+            }else {
+                map.put(i,(double)stageCount[i]/failRate[i]);
+            }            
+        }
+        List<Integer> list = new ArrayList<>(map.keySet());
+        Collections.sort(list,(o1,o2)->Double.compare(map.get(o2),map.get(o1)));
+        
+        for(int i = 0; i < answer.length; i++){
+            answer[i] = list.get(i);
+        }
+        
         return answer;
     }
 }
 
-class Solution2 {
-    public int[] solution(String s) {
-        int[] answer = new int[s.length()];
-        String[] spl = s.split("");
-        List<String> list = new ArrayList<>();
-        for(String c : spl){
-            list.add(c);
+
+class Solution2 { //직접짠 코드
+    public int[] solution(int N, int[] stages) {        
+        int[] answer = new int[N];
+        double people = stages.length;
+        
+        Arrays.sort(stages);
+        
+        HashMap<Integer,Double> hm = new HashMap<>();
+        for(int i = 0; i < stages.length; i++){            
+            if(hm.containsKey(stages[i]))hm.put(stages[i],hm.get(stages[i])+1);
+            else hm.put(stages[i],(double)1);     
+        }     
+        
+        double[][] rate = new double[N][2];
+        for(int i = 0; i < N; i++){           
+            if(hm.get(i+1) == null){
+                rate[i][0] = 0;
+                rate[i][1] = i+1;
+            }
+            else {
+                rate[i][0] = hm.get(i+1)/people;
+                rate[i][1] = i+1;
+                people -= hm.get(i+1);
+            }
         }
-        for(int i = 0; i < list.size(); i++){
-            if(list.indexOf(list.get(i)) != i){
-                answer[i] = i-list.indexOf(list.get(i));
-                list.set(list.indexOf(list.get(i)),"0");
-            }else {
-                answer[i] = -1;
-            }            
+
+        Arrays.sort(rate, new Comparator<double[]>() {
+            @Override
+            public int compare(double[] o1, double[] o2) {
+                if(o1[0] == o2[0]){
+                    return Double.compare(o1[1],o2[1]);
+                }else {
+                    return Double.compare(o2[0],o1[0]);
+                }
+            }
+        });
+        
+        for(int i = 0; i < rate.length; i++){
+            System.out.println(rate[i][0]+" "+rate[i][1]);
+            answer[i] = (int) rate[i][1];
         }
         return answer;
     }
