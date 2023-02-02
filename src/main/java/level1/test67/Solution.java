@@ -41,10 +41,10 @@ class Solution2 {
 
         List<Integer> list = new ArrayList<>();
         for(int n : ingredient){
-            list.add(n);
-            if(list.size() >= 4) {
-                if(list.get(list.size() - 4) == 1 && list.get(list.size() - 3) == 2 && 
-                   list.get(list.size() - 2) == 3 && list.get(list.size() - 1) == 1){
+            list.add(n); //재료를 하나씩추가
+            if(list.size() >= 4) { //재료가 4개이상일때 아래 비교문을 실행
+                if(list.get(list.size() - 4) == 1 && list.get(list.size() - 3) == 2 &&  //현재 받은 재료 index가 3이면 size를 통해 0 1 2 3 순으로 처리해준다 
+                   list.get(list.size() - 2) == 3 && list.get(list.size() - 1) == 1){ //1,2,3,1 이 맞으면 answer을 count하고 해당 재료들을 치운다 remove
                     answer++;
                     list.remove(list.size() - 1);
                     list.remove(list.size() - 1);
