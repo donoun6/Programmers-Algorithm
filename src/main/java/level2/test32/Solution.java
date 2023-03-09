@@ -2,47 +2,80 @@ package level2.test32;
 import java.util.*;
 
 /* 
-XYZ 마트는 일정한 금액을 지불하면 10일 동안 회원 자격을 부여합니다. XYZ 마트에서는 회원을 대상으로 매일 한 가지 제품을 할인하는 행사를 합니다. 
-할인하는 제품은 하루에 하나씩만 구매할 수 있습니다. 알뜰한 정현이는 자신이 원하는 제품과 수량이 할인하는 날짜와 10일 연속으로 일치할 경우에 맞춰서 회원가입을 하려 합니다.
+신입사원 어피치는 카카오톡으로 전송되는 메시지를 압축하여 전송 효율을 높이는 업무를 맡게 되었다. 메시지를 압축하더라도 전달되는 정보가 바뀌어서는 안 되므로, 압축 전의 정보를 완벽하게 복원 가능한 무손실 압축 알고리즘을 구현하기로 했다.
 
-예를 들어, 정현이가 원하는 제품이 바나나 3개, 사과 2개, 쌀 2개, 돼지고기 2개, 냄비 1개이며, 
-XYZ 마트에서 15일간 회원을 대상으로 할인하는 제품이 날짜 순서대로 치킨, 사과, 사과, 바나나, 쌀, 사과, 돼지고기, 바나나, 돼지고기, 쌀, 냄비, 바나나, 사과, 바나나인 경우에 대해 알아봅시다. 첫째 날부터 열흘 간에는 냄비가 할인하지 않기 때문에 첫째 날에는 회원가입을 하지 않습니다. 둘째 날부터 열흘 간에는 바나나를 원하는 만큼 할인구매할 수 없기 때문에 둘째 날에도 회원가입을 하지 않습니다. 셋째 날, 넷째 날, 다섯째 날부터 각각 열흘은 원하는 제품과 수량이 일치하기 때문에 셋 중 하루에 회원가입을 하려 합니다.
+어피치는 여러 압축 알고리즘 중에서 성능이 좋고 구현이 간단한 LZW(Lempel–Ziv–Welch) 압축을 구현하기로 했다. LZW 압축은 1983년 발표된 알고리즘으로, 이미지 파일 포맷인 GIF 등 다양한 응용에서 사용되었다.
 
-정현이가 원하는 제품을 나타내는 문자열 배열 want와 정현이가 원하는 제품의 수량을 나타내는 정수 배열 number,
-XYZ 마트에서 할인하는 제품을 나타내는 문자열 배열 discount가 주어졌을 때, 회원등록시 정현이가 원하는 제품을 모두 할인 받을 수 있는 회원등록 날짜의 총 일수를 return 하는 solution 함수를 완성하시오. 가능한 날이 없으면 0을 return 합니다.
+LZW 압축은 다음 과정을 거친다.
+
+길이가 1인 모든 단어를 포함하도록 사전을 초기화한다.
+사전에서 현재 입력과 일치하는 가장 긴 문자열 w를 찾는다.
+w에 해당하는 사전의 색인 번호를 출력하고, 입력에서 w를 제거한다.
+입력에서 처리되지 않은 다음 글자가 남아있다면(c), w+c에 해당하는 단어를 사전에 등록한다.
+단계 2로 돌아간다.
+압축 알고리즘이 영문 대문자만 처리한다고 할 때, 사전은 다음과 같이 초기화된다. 사전의 색인 번호는 정수값으로 주어지며, 1부터 시작한다고 하자.
  */
-class Solution { 
-    private static int answer = 0;
-    public int solution(String[] want, int[] number, String[] discount) {       
-        Map<String,Integer> map = new HashMap<>();
-        
-        for(int i = 0; i < want.length; i++){ //원하는 장바구니 Map
-            map.put(want[i],number[i]);
+class Solution {
+     static Map<String,Integer> map;
+     static List<Integer> list;
+    public int[] solution(String msg) {       
+        map = init();
+        list = LZW(msg);
+
+        int[] answer = new int[list.size()];     
+        int index = 0;
+        for(int ans : list){
+            answer[index] = ans;
+            index++;
         }
-                
-        for(int i = 0; i <= discount.length-10; i++){ //마트에서의 10일
-            check(map , cart(i,discount)); //함수호출
-        }
-        
         return answer;
     }
-    
-    // 10일간 담을수 있는 장바구니 Map
-    private static Map<String,Integer> cart(int index,String[] discount){
-        Map<String,Integer> map = new HashMap<>();
-        for(int i = index; i < index+10; i++){
-            map.put(discount[i],map.getOrDefault(discount[i],0)+1);
+
+    private static Map<String,Integer> init(){ //A-Z까지 색인번호 초기화
+        map = new HashMap<>();
+        char c = 'A';
+        for(int i = 0; i < 26; i++){
+            map.put(String.valueOf(c),i+1);
+            c++;
         }
         return map;
     }
-    
-    // 원하는 장바구니와 10일간 담을수 있는 장바구니를 비교하는 메서드
-    private static void check(Map<String,Integer> want, Map<String,Integer> cart){
-        for(String key : cart.keySet()){ //이것만 사용해도 된다.
-            if(cart.get(key) != want.get(key)) {
-                return;
+
+    private static List<Integer> LZW(String msg){ //LZW알고리즘
+        list = new ArrayList<>();
+        //마지막 문자일 경우
+        for(int i = 0; i < msg.length(); i++){     
+            if(i+1 == msg.length()){
+                list.add(map.get(String.valueOf(msg.charAt(i))));//색인번호를 list에추가
+                break;
+            }
+            
+            String w = String.valueOf(msg.charAt(i));
+            String c = String.valueOf(msg.charAt(i+1));
+			
+            /*
+            *map에 w+c가 있다면
+            *w는 w+c의 형태로 갱신
+            *c는 c의 다음 알파뱃으로 갱신
+            */
+            while(map.containsKey(w+c)){
+            	w = w+c;
+                i++;
+                if (i == msg.length() - 1) {//마지막 글씨일 경우
+                    c = ""; //c는 빈값으로
+                    list.add(map.get(w)); //map에 등록된 색인번호를 list에 추가
+                    break;
+                }
+                c = String.valueOf(msg.charAt(i+1));
+            }
+			
+            //map에 w+c가 없다면
+            if(!map.containsKey(w+c)){ 
+                list.add(map.get(w)); //map에 등록된 색인번호를 list에 추가
+                map.put(w+c,map.size()+1); //key에 w+c 추가 value에 색인번호 추가
             }
         }
-        answer++;
+        return list;
     }
+
 }
