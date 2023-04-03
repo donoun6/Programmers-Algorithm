@@ -10,58 +10,39 @@ import java.util.*;
 arr이 매개변수로 주어집니다. 위와 같은 방식으로 arr을 압축했을 때, 배열에 최종적으로 남는 0의 개수와 1의 개수를 배열에 담아서 return 하도록 solution 함수를 완성해주세요.
  */
 
-
 class Solution {
-    public int[] solution(int[][] arr) {
-        int[] answer = new int[2];
+    static int[] answer = new int[2];
+    static int[][] quadtree;
+    
+    public int[] solution(int[][] arr) { 
+        quadtree = arr;
         int leng = arr.length;
-        boolean[][] visit = new boolean[leng][leng];
-
-        while (leng >= 1) {
-            for (int i = 0; i < arr.length; i += leng) {
-                for (int j = 0; j < arr.length; j += leng) {
-                    if (visit[i][j]) continue;
-                    int count = 0;
-                    int x = 0;
-                    int y = 0;
-                    boolean check = true;
-                    while (count != leng * leng) {
-                        if (arr[i + y][j + x] != arr[i][j]) {
-                            System.out.println();
-                            check = false;
-                            break;
-                        }
-                        x++;
-                        if (x == leng) {
-                            x = 0;
-                            y++;
-                        }
-                        count++;
-                    }
-                    if (check) {
-                        int vcount = 0;
-                        int vx = 0;
-                        int vy = 0;
-                        while (vcount != leng * leng) {
-                            visit[i + vx][j + vy] = true;
-                            vx++;
-                            if (vx == leng) {
-                                vx = 0;
-                                vy++;
-                            }
-                            vcount++;
-                        }
-                        if (arr[i][j] == 1) {
-                            answer[1]++;
-                        } else {
-                            answer[0]++;
-                        }
-                    }
+        compression(leng, 0, 0);
+        return answer;
+    }
+    
+    public void compression (int leng, int y, int x) {
+        int num = quadtree[y][x];
+        if(leng == 1 || check(leng, y, x)){
+            answer[num]++;
+        }else {
+            leng /= 2;
+            compression(leng, y, x);
+            compression(leng, y, x+leng);
+            compression(leng, y+leng, x);
+            compression(leng, y+leng, x+leng);
+        }        
+    }
+    
+    public boolean check (int leng, int y, int x) {
+        int num = quadtree[y][x];
+        for(int i = y; i < y + leng; i++) {
+            for(int j = x; j < x + leng; j++) {
+                if(num != quadtree[i][j]) {
+                    return false;
                 }
             }
-            leng /= 2;
         }
-        
-        return answer;
+        return true;
     }
 }
